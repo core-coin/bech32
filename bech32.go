@@ -89,9 +89,10 @@ func Encode(hrp string, data []int) (string, error) {
 		return "", fmt.Errorf("mix case : hrp=%v", hrp)
 	}
 	lower := strings.ToLower(hrp) == hrp
-  mixed := (strings.ToUpper(hrp[0]) + strings.ToLower(hrp[1])) == hrp[0:2]
+	mixed := (strings.ToUpper(string(hrp[0])) + strings.ToLower(string(hrp[1]))) == hrp[0:2]
 	hrp = strings.ToLower(hrp)
-	combined := append(data, checksum := createChecksum(hrp, data)...)
+	checksum := createChecksum(hrp, data)
+	combined := append(data, checksum...)
 	var ret bytes.Buffer
 	ret.WriteString(hrp)
 	ret.WriteString("1")
@@ -103,8 +104,16 @@ func Encode(hrp string, data []int) (string, error) {
 	}
 	if lower {
 		return ret.String(), nil
-  } else if mixed {
-		return MixedCase(hrp, data, checksum), nil
+	} else if mixed {
+		datastr := []byte{}
+		for _, sym := range data {
+			datastr = append(datastr, byte(int8(sym)))
+		}
+		checksumstr := []byte{}
+		for _, sym := range checksum {
+			checksumstr = append(checksumstr, byte(int8(sym)))
+		}
+		return MixedCase(hrp, string(datastr), string(checksumstr)), nil
 	}
 	return strings.ToUpper(ret.String()), nil
 }
@@ -219,21 +228,22 @@ func SegwitAddrEncode(hrp string, version int, program []int) (string, error) {
 
 // Create mixed Bech32 address
 func MixedCase(hrpin string, data string, checksumin string) string {
+	var checksum string
 	lower := false
 	var mixedAddress bytes.Buffer
-	for idx := 0; (idx + 1) < len(hrpin)/4; idx+4 {
+	for idx := 0; (idx + 1) < len(hrpin)/4; idx += 4 {
 		if lower {
-			mixedAddress.WriteString(strings.ToLower(address[idx:4]))
+			mixedAddress.WriteString(strings.ToLower(data[idx:4]))
 		} else {
-			mixedAddress.WriteString(strings.ToUpper(address[idx:4]))
+			mixedAddress.WriteString(strings.ToUpper(data[idx:4]))
 		}
 		lower = !lower
 	}
-	hrp := strings.ToUpper(hrpin[0]) + strings.ToLower(hrpin[1:len(hrpin)-1])
+	hrp := strings.ToUpper(string(hrpin[0])) + strings.ToLower(hrpin[1:len(hrpin)-1])
 	if lower {
-		checksum := strings.ToLower(checksumin)
+		checksum = strings.ToLower(checksumin)
 	} else {
-		checksum := strings.ToUpper(checksumin)
+		checksum = strings.ToUpper(checksumin)
 	}
 	return hrp + mixedAddress.String() + checksum
 }
