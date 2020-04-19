@@ -18,10 +18,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package bech32_test
+package bech32
 
 import (
-	"bech32"
 	"reflect"
 	"strings"
 	"testing"
@@ -117,7 +116,7 @@ var invalidAddress = []string{
 
 func TestValidChecksum(t *testing.T) {
 	for _, test := range validChecksum {
-		hrp, data, err := bech32.Decode(test)
+		hrp, data, err := Decode(test)
 		if err != nil {
 			t.Errorf("Valid checksum for %s : FAIL / error %+v\n", test, err)
 		} else {
@@ -128,7 +127,7 @@ func TestValidChecksum(t *testing.T) {
 
 func TestInvalidChecksum(t *testing.T) {
 	for _, test := range invalidChecksum {
-		hrp, data, err := bech32.Decode(test)
+		hrp, data, err := Decode(test)
 		if err != nil {
 			t.Logf("Invalid checksum for %s : ok / hrp : %+v , data : %+v\n", test, hrp, data)
 		} else {
@@ -140,10 +139,10 @@ func TestInvalidChecksum(t *testing.T) {
 func TestValidAddress(t *testing.T) {
 	for _, test := range validAddress {
 		hrp := "bc"
-		version, program, err := bech32.SegwitAddrDecode(hrp, test.address)
+		version, program, err := SegwitAddrDecode(hrp, test.address)
 		if err != nil {
 			hrp = "tb"
-			version, program, err = bech32.SegwitAddrDecode(hrp, test.address)
+			version, program, err = SegwitAddrDecode(hrp, test.address)
 		}
 		ok := err == nil
 		if ok {
@@ -151,7 +150,7 @@ func TestValidAddress(t *testing.T) {
 			ok = reflect.DeepEqual(output, test.scriptpubkey)
 		}
 		if ok {
-			recreate, err := bech32.SegwitAddrEncode(hrp, version, program)
+			recreate, err := SegwitAddrEncode(hrp, version, program)
 			if err == nil {
 				ok = recreate == strings.ToLower(test.address)
 			}
@@ -166,9 +165,9 @@ func TestValidAddress(t *testing.T) {
 
 func TestInvalidAddress(t *testing.T) {
 	for _, test := range invalidAddress {
-		_, _, bcErr := bech32.SegwitAddrDecode("bc", test)
+		_, _, bcErr := SegwitAddrDecode("bc", test)
 		t.Logf("bc error:%v\n", bcErr)
-		_, _, tbErr := bech32.SegwitAddrDecode("tb", test)
+		_, _, tbErr := SegwitAddrDecode("tb", test)
 		t.Logf("tb error:%v\n", tbErr)
 		if bcErr != nil && tbErr != nil {
 			t.Logf("Invalid address %v : ok\n", test)
@@ -187,74 +186,74 @@ func TestCoverage(t *testing.T) {
 	var data []int
 
 	// SegwitAddrEncode
-	bech32String, err = bech32.SegwitAddrEncode("bc", 1, []int{0, 1})
+	bech32String, err = SegwitAddrEncode("bc", 1, []int{0, 1})
 	if err != nil {
 		t.Errorf("Coverage SegwitAddrEncode normal case : FAIL / error : %+v\n", err)
 	} else {
 		t.Log("Coverage SegwitAddrEncode normal case : ok / bech32String :", bech32String)
 	}
 	data = make([]int, 40)
-	bech32String, err = bech32.SegwitAddrEncode("bc", 16, data)
+	bech32String, err = SegwitAddrEncode("bc", 16, data)
 	if err != nil {
 		t.Errorf("Coverage SegwitAddrEncode normal case : FAIL / error : %+v\n", err)
 	} else {
 		t.Log("Coverage SegwitAddrEncode normal case : ok / bech32String :", bech32String)
 	}
 	data = make([]int, 20)
-	bech32String, err = bech32.SegwitAddrEncode("bc", 0, data)
+	bech32String, err = SegwitAddrEncode("bc", 0, data)
 	if err != nil {
 		t.Errorf("Coverage SegwitAddrEncode normal case : FAIL / error : %+v\n", err)
 	} else {
 		t.Log("Coverage SegwitAddrEncode normal case : ok / bech32String :", bech32String)
 	}
 	data = make([]int, 32)
-	bech32String, err = bech32.SegwitAddrEncode("bc", 0, data)
+	bech32String, err = SegwitAddrEncode("bc", 0, data)
 	if err != nil {
 		t.Errorf("Coverage SegwitAddrEncode normal case : FAIL / error : %+v\n", err)
 	} else {
 		t.Log("Coverage SegwitAddrEncode normal case : ok / bech32String :", bech32String)
 	}
 	data = make([]int, 1)
-	_, err = bech32.SegwitAddrEncode("bc", 1, data)
+	_, err = SegwitAddrEncode("bc", 1, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid program length error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode invalid program length error case : ok / error :", err)
 	}
 	data = make([]int, 41)
-	_, err = bech32.SegwitAddrEncode("bc", 1, data)
+	_, err = SegwitAddrEncode("bc", 1, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid program length error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode invalid program length error case : ok / error :", err)
 	}
 	data = make([]int, 26)
-	_, err = bech32.SegwitAddrEncode("bc", 0, data)
+	_, err = SegwitAddrEncode("bc", 0, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid program length for witness version 0 (per BIP141) error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode invalid program length for witness version 0 (per BIP141) error case : ok / error :", err)
 	}
 	data = make([]int, 20)
-	_, err = bech32.SegwitAddrEncode("Bc", 0, data)
+	_, err = SegwitAddrEncode("Bc", 0, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode Encode error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode Encode error case : ok / error :", err)
 	}
-	_, err = bech32.SegwitAddrEncode("bc", 1, []int{-1, 0})
+	_, err = SegwitAddrEncode("bc", 1, []int{-1, 0})
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid data range error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode invalid data range error case : ok / error :", err)
 	}
-	_, err = bech32.SegwitAddrEncode("bc", -1, data)
+	_, err = SegwitAddrEncode("bc", -1, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid witness version error case : FAIL")
 	} else {
 		t.Log("Coverage SegwitAddrEncode invalid witness version error case : ok / error :", err)
 	}
-	_, err = bech32.SegwitAddrEncode("bc", 17, data)
+	_, err = SegwitAddrEncode("bc", 17, data)
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrEncode invalid witness version error case : FAIL")
 	} else {
@@ -262,7 +261,7 @@ func TestCoverage(t *testing.T) {
 	}
 
 	// SegwitAddrDecode
-	_, _, err = bech32.SegwitAddrDecode("a", "A12UEL5L")
+	_, _, err = SegwitAddrDecode("a", "A12UEL5L")
 	if err == nil {
 		t.Errorf("Coverage SegwitAddrDecode invalid decode data length error case : FAIL")
 	} else {
@@ -270,43 +269,43 @@ func TestCoverage(t *testing.T) {
 	}
 
 	// Decode
-	_, _, err = bech32.Decode("!~1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc356v3")
+	_, _, err = Decode("!~1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc356v3")
 	if err != nil {
 		t.Errorf("Coverage Decode normal case : FAIL / error :%v", err)
 	} else {
 		t.Log("Coverage Decode normal case : ok")
 	}
-	_, _, err = bech32.Decode("a1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
+	_, _, err = Decode("a1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode too long error case : FAIL")
 	} else {
 		t.Log("Coverage Decode too long error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("1")
+	_, _, err = Decode("1")
 	if err == nil {
 		t.Errorf("Coverage Decode separator '1' at invalid position error case : FAIL")
 	} else {
 		t.Log("Coverage Decode separator '1' at invalid position error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a1qqqqq")
+	_, _, err = Decode("a1qqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode separator '1' at invalid position error case : FAIL")
 	} else {
 		t.Log("Coverage Decode separator '1' at invalid position error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a" + string(32) + "1qqqqqq")
+	_, _, err = Decode("a" + string(32) + "1qqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character human-readable part error case : FAIL")
 	} else {
 		t.Log("Coverage Decode invalid character human-readable part error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a" + string(127) + "1qqqqqq")
+	_, _, err = Decode("a" + string(127) + "1qqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character human-readable part error case : FAIL")
 	} else {
 		t.Log("Coverage Decode invalid character human-readable part error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a1qqqqqb")
+	_, _, err = Decode("a1qqqqqb")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character data part error case : FAIL")
 	} else {
@@ -316,14 +315,14 @@ func TestCoverage(t *testing.T) {
 	// Encode
 	hrp = "bc"
 	data = []int{}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err != nil || bech32String != strings.ToLower(bech32String) {
 		t.Errorf("Coverage Encode lower case : FAIL / bech32String : %v , error : %v", bech32String, err)
 	} else {
 		t.Log("Coverage Encode lower case : ok / bech32String : ", bech32String)
 	}
 	hrp = "BC"
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err != nil || bech32String != strings.ToUpper(bech32String) {
 		t.Errorf("Coverage Encode upper case : FAIL / bech32String : %v , error : %v", bech32String, err)
 	} else {
@@ -331,7 +330,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = make([]int, 90-7-len(hrp)+1)
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode too long error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -339,7 +338,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = ""
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid hrp error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -347,7 +346,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "Bc"
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode mix case error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -355,7 +354,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = string(33) + string(126)
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err != nil {
 		t.Errorf("Coverage Encode normal case : FAIL / error : %v", err)
 	} else {
@@ -363,7 +362,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = string(32) + "c"
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid character human-readable part error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -371,7 +370,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "b" + string(127)
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid character human-readable part error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -379,7 +378,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{0, 31}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err != nil {
 		t.Errorf("Coverage Encode normal case : FAIL / error : %v", err)
 	} else {
@@ -387,7 +386,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{-1}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid data error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -395,7 +394,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{32}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = Encode(hrp, data)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid data error case : FAIL / bech32String : %v", bech32String)
 	} else {
